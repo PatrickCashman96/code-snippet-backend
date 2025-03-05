@@ -16,8 +16,12 @@ const { isAuthenticated } = require("../middleware/jwt.middleware.js");
 // How many rounds should bcrypt run the salt (default - 10 rounds)
 const saltRounds = 10;
 
+// test for routes
+router.get("/test", (req, res) => res.json({ message: "Auth test works" }));
+
 // POST /auth/signup  - Creates a new user in the database
 router.post("/signup", (req, res, next) => {
+  console.log("Signup route hit:", req.body);
   const { email, password, name } = req.body;
 
   // Check if email or password or name are provided as empty strings
