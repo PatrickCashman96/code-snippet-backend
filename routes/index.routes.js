@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Snippet = require("../models/Snippet.model");
+const Favorite = require("../models/Favorite.model");
 const { isAuthenticated } = require("../middleware/jwt.middleware");
 
 router.get("/", (req, res, next) => {
@@ -86,5 +87,48 @@ router.delete("/snippets/:id", isAuthenticated, async (req, res, next) => {
       next(error);
   }
 });
+
+
+// Favourite CRUD
+// POST create favorite
+router.post("/favorites", isAuthenticated, async (req, res, next) => {
+  const { snippetId } = req.body;
+  try {
+    if (!snippetId) return res.status(400).json({ error: "Snippet ID required" });
+    const snippet = await Snippet.findById(snippetId);
+    if (!snippet) return res.status(404).json({ error: "Snippet not found" });
+    const favorite = await Favorite.create({ user: req.payload._id, snippet: snippetId });
+    res.status(201).json(favorite);
+  } catch (error) {
+    if (error.code === 11000) return res.status(400).json({ error: "Already favorited" });
+    next(error);
+  }
+});
+
+// GET favourites -> output: list of all favorites
+router.get("/favorites", isAuthenticated, async (req, res, next) => {
+  try {
+    const favorites = await Favorite.find({ user: req.payload._id }).populate("snippet");
+    res.json(favorites);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// delete snippet from favorites
+router.delete("/favorites/:id", isAuthenticated, async (req, res, next) => {
+  try {
+    const favorite = await Favorite.findById(req.params.id);
+    if (!favorite) return res.status(404).json({ error: "Favorite not found" });
+    if (favorite.user.toString() !== req.payload._id) {
+      return res.status(403).json({ error: "Not your favorite" });
+    }
+    await Favorite.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 module.exports = router;
