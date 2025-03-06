@@ -11,7 +11,14 @@ router.get("/", (req, res, next) => {
 router.post("/snippets", isAuthenticated, async (req, res, next) => {
   const {title, code, language, tags} = req.body;
   try {
+    // Stricter validation 
       if (!title || !code || !language) return res.status(400).json({ message: "Title, code, and language are required" });
+      if (typeof title !== "string" || title.length > 50) return res.status(400).json({ error: "Title must be a string, max 50 characters" }); // Placeholder values
+      if (typeof code !== "string" || code.length > 1000) return res.status(400).json({ error: "Code must be a string, max 1000 characters"}); // can change later
+    // check for duplicate snippet title per user
+      const existing = await Snippet.findOne({ title, createdBy: req.payload._id});
+      if (existing) return res.status(400).json({ error: "You already have a snippet with this title"});
+
       const snippet = await Snippet.create({
           title,
           code,
@@ -49,12 +56,18 @@ router.get("/snippets/:id", async (req, res, next) => {
 // PUT /api/snippets/:id - Update a snippet (protected, only accessible by the owner of the snippet)
 router.put("/snippets/:id", isAuthenticated, async (req, res, next) => {
   try {
-      const snippet = await Snippet.findById(req.params.id);
-      if (!snippet) return res.status(404).json({message: "Snippet not found"});
-      if (snippet.createdBy.toString() !== req.payload._id) return res.status(403).json({message: "You can only edit your own snippets"});
-  
-  const updatedSnippet = await Snippet.findByIdAndUpdate(req.params.id, req.body, {new: true});
-  res.json(updatedSnippet);
+    const snippet = await Snippet.findById(req.params.id);
+    if (!snippet) return res.status(404).json({message: "Snippet not found"});
+    if (snippet.createdBy.toString() !== req.payload._id) return res.status(403).json({message: "You can only edit your own snippets"});
+    // Validation for updates
+    if (title && (typeof title !== "string" || title.length > 50)) return res.status(400).json({ error: "Title must be a string, max 50 characters" }); // Placeholder values;
+    if (code && (typeof code !== "string" || code.length > 1000)) return res.status(400).json({ error: "Code must be a string, max 1000 characters"}); // can change later
+    if (title && title !== snippet.title) {
+      const existing = await Snippet.findOne({title, createdBy: req.payload._id});
+      if (existing) return res.status(400).json({ error: "You already have a snippet with this title" });
+    }
+    const updatedSnippet = await Snippet.findByIdAndUpdate(req.params.id, req.body, {new: true});
+    res.json(updatedSnippet);
   } catch (error) {
       next(error);
   }
