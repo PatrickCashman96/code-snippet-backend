@@ -9,6 +9,13 @@ module.exports = (app) => {
     // always logs the error
     console.error("ERROR", req.method, req.path, err);
 
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err.name === "CastError") {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
+
     // only render if the error ocurred before sending the response
     if (!res.headersSent) {
       res.status(500).json({
