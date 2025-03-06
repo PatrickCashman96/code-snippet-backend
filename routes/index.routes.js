@@ -55,6 +55,7 @@ router.get("/snippets/:id", async (req, res, next) => {
 
 // PUT /api/snippets/:id - Update a snippet (protected, only accessible by the owner of the snippet)
 router.put("/snippets/:id", isAuthenticated, async (req, res, next) => {
+  const {title, code, language, tags} = req.body;
   try {
     const snippet = await Snippet.findById(req.params.id);
     if (!snippet) return res.status(404).json({message: "Snippet not found"});
