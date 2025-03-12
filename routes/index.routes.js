@@ -3,6 +3,7 @@ const router = express.Router();
 const Snippet = require("../models/Snippet.model");
 const Favorite = require("../models/Favorite.model");
 const { isAuthenticated } = require("../middleware/jwt.middleware");
+const mongoose = require("mongoose");
 
 router.get("/", (req, res, next) => {
   res.json("All good in here");
