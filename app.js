@@ -4,12 +4,12 @@ require("./db");
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+const FRONTEND_URL = process.env.ORIGIN || "http://localhost:5173"
 // ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
 
 
 app.use(cors({
-  origin:["http://localhost:5173"],
+  origin:[FRONTEND_URL],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
